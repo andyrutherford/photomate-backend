@@ -2,6 +2,8 @@ const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cors = require('cors');
+
 const connectDB = require('./config/db');
 
 dotenv.config({ path: './config/config.env' });
@@ -11,6 +13,9 @@ connectDB();
 const auth = require('./routes/auth-route');
 
 const app = express();
+
+// CORS
+app.use(cors());
 
 // Body parser
 app.use(express.json());

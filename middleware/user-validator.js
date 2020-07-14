@@ -65,6 +65,8 @@ exports.validateLogin = [
     .withMessage('Password must be at least 6 characters')
     .bail(),
   (req, res, next) => {
+    console.log(req.body);
+
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(422).json({ errors: errors.array() });
@@ -91,12 +93,13 @@ exports.ensureDoesntExist = async (req, res, next) => {
 
 exports.ensureExists = async (req, res, next) => {
   const emailExists = await User.findOne({ email: req.body.userID });
+  if (emailExists) return next();
   const usernameExists = await User.findOne({ username: req.body.userID });
-
+  if (usernameExists) return next();
   if (!emailExists && !usernameExists) {
     return res.status(400).json({
       success: false,
       message: 'Username or email not found.  Please create an account.',
     });
-  } else return next();
+  }
 };

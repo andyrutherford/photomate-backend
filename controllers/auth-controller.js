@@ -69,7 +69,7 @@ exports.login = async (req, res, next) => {
     if (!passwordMatch) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid credentials.  Please try again."',
+        message: 'Invalid credentials.  Please try again.',
       });
     }
     //   Generate new JWT payload
