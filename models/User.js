@@ -22,24 +22,30 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
   },
-  website: {
-    type: String,
-    trim: true,
-  },
-  bio: {
-    type: String,
-  },
-  phoneNumber: {
-    type: Number,
-    trim: true,
-  },
-  gender: {
-    type: String,
-    enum: ['male', 'female', 'other'],
-  },
   createdAt: {
     type: Date,
     default: Date.now,
+  },
+  profile: {
+    website: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+    },
+    phoneNumber: {
+      type: Number,
+      trim: true,
+      default: null,
+    },
+    gender: {
+      type: String,
+      enum: ['', 'male', 'female', 'other'],
+      default: '',
+    },
   },
 });
 

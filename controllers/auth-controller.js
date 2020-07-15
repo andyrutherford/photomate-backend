@@ -106,9 +106,10 @@ exports.login = async (req, res, next) => {
 // @access  PRIVATE
 exports.loadUser = async (req, res, next) => {
   try {
-    console.log(req.user.email);
-    const user = await User.findById(req.user.id).select('-password');
-    res.status(200).json(user);
+    const user = await User.findById(req.user.id);
+    res
+      .status(200)
+      .json({ id: user.id, username: user.username, email: user.email });
   } catch (error) {
     console.log(error.message);
   }

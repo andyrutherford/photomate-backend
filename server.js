@@ -11,6 +11,7 @@ dotenv.config({ path: './config/config.env' });
 connectDB();
 
 const auth = require('./routes/auth-route');
+const user = require('./routes/user-route');
 
 const app = express();
 
@@ -27,6 +28,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Routes
 app.use('/api/v1/auth', auth);
+app.use('/api/v1/user', user);
 
 const PORT = process.env.PORT || 5000;
 
