@@ -109,7 +109,12 @@ exports.loadUser = async (req, res, next) => {
     const user = await User.findById(req.user.id);
     res
       .status(200)
-      .json({ id: user.id, username: user.username, email: user.email });
+      .json({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+      });
   } catch (error) {
     console.log(error.message);
   }
