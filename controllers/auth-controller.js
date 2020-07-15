@@ -100,3 +100,16 @@ exports.login = async (req, res, next) => {
     console.log(error.message);
   }
 };
+
+// @desc    Load user
+// @route   GET /api/v1/auth
+// @access  PRIVATE
+exports.loadUser = async (req, res, next) => {
+  try {
+    console.log(req.user.email);
+    const user = await User.findById(req.user.id).select('-password');
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error.message);
+  }
+};

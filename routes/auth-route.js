@@ -7,8 +7,10 @@ const {
   ensureDoesntExist,
   ensureExists,
 } = require('../middleware/user-validator');
-const { signup, login } = require('../controllers/auth-controller');
+const auth = require('../middleware/auth');
+const { signup, login, loadUser } = require('../controllers/auth-controller');
 
+router.route('/').get(auth, loadUser);
 router.route('/signup').post(validateSignup, ensureDoesntExist, signup);
 router.route('/login').post(validateLogin, ensureExists, login);
 
