@@ -12,6 +12,7 @@ connectDB();
 
 const auth = require('./routes/auth-route');
 const user = require('./routes/user-route');
+const post = require('./routes/post-route');
 
 const app = express();
 
@@ -29,6 +30,7 @@ if (process.env.NODE_ENV === 'development') {
 // Routes
 app.use('/api/v1/auth', auth);
 app.use('/api/v1/user', user);
+app.use('/api/v1/post', post);
 
 const PORT = process.env.PORT || 5000;
 
