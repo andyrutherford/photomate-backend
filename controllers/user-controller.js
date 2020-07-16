@@ -16,6 +16,7 @@ exports.getProfile = async (req, res, next) => {
 // @route   GET /api/v1/user
 // @access  PRIVATE
 exports.updateProfile = async (req, res, next) => {
+  console.log(req.body);
   const { website, bio, phoneNumber, gender } = req.body;
   const profile = {
     website: website || '',
@@ -27,7 +28,10 @@ exports.updateProfile = async (req, res, next) => {
     let user = await User.findById(req.user.id);
     user.profile = profile;
     await user.save();
-    res.send(user);
+    res.json({
+      success: true,
+      user,
+    });
   } catch (error) {
     console.log(error.message);
   }
