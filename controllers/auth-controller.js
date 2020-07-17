@@ -107,14 +107,13 @@ exports.login = async (req, res, next) => {
 exports.loadUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
-    res
-      .status(200)
-      .json({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        name: user.name,
-      });
+    res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      name: user.name,
+      avatar: user.avatar,
+    });
   } catch (error) {
     console.log(error.message);
   }
