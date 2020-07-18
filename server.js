@@ -1,3 +1,5 @@
+const fs = require('fs');
+const bodyParser = require('body-parser');
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
@@ -20,7 +22,11 @@ const app = express();
 app.use(cors());
 
 // Body parser
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(require('body-parser').urlencoded({ extended: true }));
+
+// Serve images statically
+app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 
 // HTTP request logging
 if (process.env.NODE_ENV === 'development') {

@@ -1,3 +1,6 @@
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+
 const User = require('../models/User');
 
 // @desc    Get user profile
@@ -16,9 +19,7 @@ exports.getProfile = async (req, res, next) => {
 // @route   GET /api/v1/user/:username
 // @access  PUBLIC
 exports.getUserById = async (req, res, next) => {
-  console.log(req.body);
   const { username } = req.params;
-  console.log(username);
   try {
     let user = await User.findOne({
       username,
@@ -29,12 +30,11 @@ exports.getUserById = async (req, res, next) => {
         success: false,
         message: 'User not found.',
       });
-    }
-
-    res.status(200).json({
-      success: true,
-      user,
-    });
+    } else
+      return res.status(200).json({
+        success: true,
+        user,
+      });
   } catch (error) {
     console.log(error.message);
   }
@@ -44,7 +44,6 @@ exports.getUserById = async (req, res, next) => {
 // @route   GET /api/v1/user
 // @access  PRIVATE
 exports.updateProfile = async (req, res, next) => {
-  console.log(req.body);
   const { website, bio, phoneNumber, gender } = req.body;
   const profile = {
     website: website || '',
@@ -69,7 +68,6 @@ exports.updateProfile = async (req, res, next) => {
 // @route   GET /api/v1/user
 // @access  PUBLIC
 exports.updateProfile = async (req, res, next) => {
-  console.log(req.body);
   const { website, bio, phoneNumber, gender } = req.body;
   const profile = {
     website: website || '',
@@ -87,5 +85,33 @@ exports.updateProfile = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error.message);
+  }
+};
+
+// @desc    Update user avatar
+// @route   PUT /api/v1/user/avatar
+// @access  PRIVATE
+exports.updateAvatar = async (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'An image is required.' });
+  }
+
+  try {
+    const response = await cloudinary.uploader.upload(req.file.path, {
+      width: 200,
+      height: 200,
+      gravity: 'face',
+      crop: 'thumb',
+    });
+    fs.unlinkSync(req.file.path);
+
+    await User.findOneAndUpdate(
+      { _id: req.user.id },
+      { avatar: response.secure_url }
+    );
+
+    return res.json({ success: true, avatar: response.secure_url });
+  } catch (err) {
+    res.send(err.message);
   }
 };

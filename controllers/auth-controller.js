@@ -44,8 +44,8 @@ exports.signup = async (req, res, next) => {
         });
       }
     );
-  } catch (err) {
-    console.log(err.message);
+  } catch (error) {
+    console.log(error.message);
   }
 };
 
