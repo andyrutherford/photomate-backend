@@ -5,7 +5,11 @@ const { v4: uuid_v4 } = require('uuid');
 
 const { validatePost } = require('../middleware/post-validator');
 const auth = require('../middleware/auth');
-const { uploadImage } = require('../controllers/post-controller');
+const {
+  uploadImage,
+  createPost,
+  getUserPosts,
+} = require('../controllers/post-controller');
 
 const MIME_TYPE_MAP = {
   'image/png': 'png',
@@ -13,7 +17,9 @@ const MIME_TYPE_MAP = {
   'image/jpg': 'jpg',
 };
 
-router.route('/new').post(
+router.route('/').get(auth, getUserPosts);
+router.route('/new').post(auth, createPost);
+router.route('/new/image').post(
   auth,
   multer({
     limits: 1000000,
