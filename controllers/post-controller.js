@@ -1,5 +1,6 @@
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const mongoose = require('mongoose');
 
 const Post = require('../models/Post');
 const User = require('../models/User');
@@ -39,7 +40,7 @@ exports.getPostsByUsername = async (req, res, next) => {
 };
 
 // @desc    Create Post
-// @route   POST /api/v1/auth/signup
+// @route   POST /api/v1/post/new
 // @access  PUBLIC
 exports.createPost = async (req, res, next) => {
   const { imageUrl, caption } = req.body;
@@ -70,7 +71,7 @@ exports.createPost = async (req, res, next) => {
 };
 
 // @desc    Upload post image
-// @route   PUT /api/v1/post/new
+// @route   PUT /api/v1/post/new/image
 // @access  PRIVATE
 exports.uploadImage = async (req, res, next) => {
   if (!req.file) {
@@ -89,8 +90,52 @@ exports.uploadImage = async (req, res, next) => {
   }
 };
 
+// @desc    Delete post by ID
+// @route   DELETE /api/v1/post/:postId
+// @access  PRIVATE
+exports.deletePostById = async (req, res, next) => {
+  const { postId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid post ID.' });
+  }
+
+  try {
+    const post = await Post.findById(postId);
+
+    // Make sure post exists
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Post does not exist.' });
+    }
+
+    // Make sure user deleting the post is user that created the post
+    if (post.user.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to delete this post.',
+      });
+    }
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { posts: postId },
+      $inc: { postCount: -1 },
+    });
+    await post.remove();
+    res
+      .status(200)
+      .json({ success: true, message: 'Post ' + postId + ' has been deleted' });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
+
 // @desc    Delete all users posts
-// @route   DELETE /api/v1/post/new
+// @route   DELETE /api/v1/post/
 // @access  PRIVATE
 exports.deleteAllUserPosts = async (req, res, next) => {
   try {
