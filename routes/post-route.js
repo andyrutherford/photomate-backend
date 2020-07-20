@@ -12,6 +12,7 @@ const {
   getPostsByUsername,
   deleteAllUserPosts,
   deletePostById,
+  getPostById,
 } = require('../controllers/post-controller');
 
 const MIME_TYPE_MAP = {
@@ -21,6 +22,7 @@ const MIME_TYPE_MAP = {
 };
 
 router.route('/').get(auth, getUserPosts);
+router.route('/:postId').get(auth, getPostById);
 router.route('/:postId').delete(auth, deletePostById);
 router.route('/').delete(auth, deleteAllUserPosts);
 router.route('/user/:username').get(auth, getPostsByUsername);

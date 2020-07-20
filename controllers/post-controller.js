@@ -19,8 +19,34 @@ exports.getUserPosts = async (req, res, next) => {
   }
 };
 
+// @desc    Get posts by post ID
+// @route   GET /api/v1/post/:postId
+// @access  PRIVATE
+exports.getPostById = async (req, res, next) => {
+  const postId = req.params.postId;
+
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid post ID.' });
+  }
+
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Post not found.' });
+    }
+    res.status(200).json({ success: true, post });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send(error.message);
+  }
+};
+
 // @desc    Get posts by User ID
-// @route   GET /api/v1/post/:userId
+// @route   GET /api/v1/post/user/:username
 // @access  PRIVATE
 
 exports.getPostsByUsername = async (req, res, next) => {
