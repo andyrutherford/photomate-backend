@@ -38,7 +38,9 @@ exports.getPostById = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: 'Post not found.' });
     }
-    res.status(200).json({ success: true, post });
+    const user = await User.findById(post.user).select('avatar username');
+
+    res.status(200).json({ success: true, user, post });
   } catch (error) {
     console.log(error.message);
     res.status(500).send(error.message);
