@@ -31,6 +31,15 @@ const UserSchema = mongoose.Schema({
     default:
       'https://res.cloudinary.com/dec2xrpad/image/upload/v1594949863/avatar.png',
   },
+  posts: [{ type: mongoose.Schema.ObjectId, ref: 'Post' }],
+  followers: {
+    type: Number,
+    default: 0,
+  },
+  following: {
+    type: Number,
+    default: 0,
+  },
   profile: {
     website: {
       type: String,

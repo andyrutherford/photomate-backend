@@ -30,7 +30,9 @@ exports.getPostsByUsername = async (req, res, next) => {
       return res.send('User doesnt exist');
     }
     const posts = await Post.find({ user: user._id });
-    res.status(200).json({ success: true, user: username, posts });
+    res
+      .status(200)
+      .json({ success: true, user: username, posts: posts.reverse() });
   } catch (error) {
     res.send(error.message);
   }
@@ -43,13 +45,15 @@ exports.createPost = async (req, res, next) => {
   const { imageUrl, caption } = req.body;
 
   try {
-    const post = await new Post({
-      user: req.user.id,
+    let post = await Post.create({
       caption,
       image: imageUrl,
+      user: req.user.id,
     });
-
-    await post.save();
+    await User.findByIdAndUpdate(req.user.id, {
+      $push: { posts: post._id },
+      $inc: { postCount: 1 },
+    });
 
     return res.status(201).json({ success: true, post });
   } catch (error) {

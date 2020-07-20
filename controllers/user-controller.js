@@ -23,7 +23,7 @@ exports.getUserById = async (req, res, next) => {
   try {
     let user = await User.findOne({
       username,
-    }).select('profile email name username avatar');
+    }).select('profile email name username avatar posts followers following');
 
     if (!user) {
       res.status(400).json({
