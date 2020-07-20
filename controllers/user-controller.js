@@ -2,6 +2,7 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
 const User = require('../models/User');
+const Post = require('../models/Post');
 
 // @desc    Get user profile
 // @route   GET /api/v1/user
@@ -113,5 +114,36 @@ exports.updateAvatar = async (req, res, next) => {
     return res.json({ success: true, avatar: response.secure_url });
   } catch (err) {
     res.send(err.message);
+  }
+};
+
+// @desc    Delete user
+// @route   Delete /api/v1/user
+// @access  PRIVATE
+exports.deleteUser = async (req, res, next) => {
+  // Delete user object
+  // Delete all user photos
+  // Leave all user comments
+  const userId = req.user.id;
+  try {
+    let user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found.' });
+    }
+    const posts = await Post.deleteMany({
+      user: req.user.id,
+    });
+
+    await user.remove();
+
+    res.status(200).json({
+      success: true,
+      message: `User ${user.username} and ${posts.deletedCount} posts have been deleted.`,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
   }
 };

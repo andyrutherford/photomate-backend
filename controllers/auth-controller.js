@@ -115,6 +115,7 @@ exports.loadUser = async (req, res, next) => {
       avatar: user.avatar,
     });
   } catch (error) {
+    res.status(500).send('Server error');
     console.log(error.message);
   }
 };

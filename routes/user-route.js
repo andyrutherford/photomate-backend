@@ -9,6 +9,7 @@ const {
   updateProfile,
   getUserById,
   updateAvatar,
+  deleteUser,
 } = require('../controllers/user-controller');
 
 const MIME_TYPE_MAP = {
@@ -19,6 +20,7 @@ const MIME_TYPE_MAP = {
 
 router.route('/').get(auth, getProfile);
 router.route('/').put(auth, updateProfile);
+router.route('/').delete(auth, deleteUser);
 router.route('/:username').get(getUserById);
 router.route('/avatar').put(
   auth,
