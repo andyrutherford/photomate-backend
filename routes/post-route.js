@@ -10,6 +10,7 @@ const {
   createPost,
   getUserPosts,
   getPostsByUsername,
+  deleteAllUserPosts,
 } = require('../controllers/post-controller');
 
 const MIME_TYPE_MAP = {
@@ -19,6 +20,7 @@ const MIME_TYPE_MAP = {
 };
 
 router.route('/').get(auth, getUserPosts);
+router.route('/').delete(auth, deleteAllUserPosts);
 router.route('/:username').get(auth, getPostsByUsername);
 router.route('/new').post(auth, createPost);
 router.route('/new/image').post(

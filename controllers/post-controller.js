@@ -88,3 +88,25 @@ exports.uploadImage = async (req, res, next) => {
     res.status(500).send(error.message);
   }
 };
+
+// @desc    Delete all users posts
+// @route   DELETE /api/v1/post/new
+// @access  PRIVATE
+exports.deleteAllUserPosts = async (req, res, next) => {
+  try {
+    const posts = await Post.deleteMany({
+      user: req.user.id,
+    });
+    let user = await User.findById(req.user.id);
+    user.posts = [];
+    await user.save();
+    res.json({
+      success: true,
+      user: user.username,
+      postsDeleted: posts.deletedCount,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send(error.message);
+  }
+};
