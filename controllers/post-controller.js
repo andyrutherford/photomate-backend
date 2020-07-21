@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const Post = require('../models/Post');
 const User = require('../models/User');
+const Comment = require('../models/Comment');
 
 // @desc    Get user posts
 // @route   GET /api/v1/post
@@ -137,7 +138,7 @@ exports.deletePostById = async (req, res, next) => {
     if (!post) {
       return res
         .status(404)
-        .json({ success: false, message: 'Post does not exist.' });
+        .json({ success: false, message: 'Post not found.' });
     }
 
     // Make sure user deleting the post is user that created the post
@@ -189,6 +190,51 @@ exports.deleteAllUserPosts = async (req, res, next) => {
 // @access  PRIVATE
 exports.addComment = async (req, res, next) => {
   const { postId } = req.params;
+  const { text } = req.body;
+  const user = req.user.id;
 
-  res.send(postId);
+  if (!text) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'A comment is required.' });
+  }
+
+  // Ensure proper object id
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid post ID.' });
+  }
+
+  try {
+    let post = await Post.findById(postId);
+
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Post not found.' });
+    }
+    let comment = await Comment.create({
+      text,
+      user,
+      post: postId,
+    });
+
+    post.comments.push(comment._id);
+    post.commentCount += 1;
+
+    post.save();
+
+    comment = await comment
+      .populate({ path: 'user', select: 'avatar username fullname' })
+      .execPopulate();
+
+    res.status(201).json({
+      sucess: true,
+      comment,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
 };

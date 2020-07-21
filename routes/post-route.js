@@ -13,6 +13,7 @@ const {
   deleteAllUserPosts,
   deletePostById,
   getPostById,
+  addComment,
 } = require('../controllers/post-controller');
 
 const MIME_TYPE_MAP = {
@@ -48,5 +49,7 @@ router.route('/new/image').post(
   }).single('image'),
   uploadImage
 );
+
+router.route('/:postId/comment').post(auth, addComment);
 
 module.exports = router;
