@@ -154,9 +154,10 @@ exports.deletePostById = async (req, res, next) => {
       $inc: { postCount: -1 },
     });
     await post.remove();
-    res
-      .status(200)
-      .json({ success: true, message: 'Post ' + postId + ' has been deleted' });
+    res.status(200).json({
+      success: true,
+      message: 'Post ' + postId + ' has been deleted.',
+    });
   } catch (error) {
     console.log(error.message);
     res.send(error.message);
@@ -235,6 +236,78 @@ exports.addComment = async (req, res, next) => {
     });
   } catch (error) {
     console.log(error.message);
+    res.send(error.message);
+  }
+};
+
+// @desc    Delete comment
+// @route   DELETE /api/v1/post/:postId/:commentId
+// @access  PRIVATE
+
+exports.deleteComment = async (req, res, next) => {
+  const userId = req.user.id;
+  const { postId, commentId } = req.params;
+
+  if (!postId)
+    return res
+      .status(400)
+      .json({ success: false, message: 'A postId is required.' });
+
+  if (!commentId)
+    return res
+      .status(400)
+      .json({ success: false, message: 'A commentId is required.' });
+
+  // Ensure proper object id
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid post ID.' });
+  }
+  if (!mongoose.Types.ObjectId.isValid(commentId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid comment ID.' });
+  }
+
+  try {
+    let comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Comment not found.',
+      });
+    }
+    let post = await Post.findById(comment.post);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found.',
+      });
+    }
+
+    if (comment.user.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to delete this comment.',
+      });
+    }
+    await comment.remove();
+
+    post.comments = post.comments.filter(
+      (comment) => comment.toString() !== commentId
+    );
+    post.commentCount -= 1;
+
+    post.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Comment ' + commentId + ' has been deleted.',
+    });
+  } catch (error) {
+    console.log('error: ', error.message);
     res.send(error.message);
   }
 };
