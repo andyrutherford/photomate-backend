@@ -183,3 +183,12 @@ exports.deleteAllUserPosts = async (req, res, next) => {
     res.status(500).send(error.message);
   }
 };
+
+// @desc    Add comment to post
+// @route   POST /api/v1/post/:postId/comment
+// @access  PRIVATE
+exports.addComment = async (req, res, next) => {
+  const { postId } = req.params;
+
+  res.send(postId);
+};
