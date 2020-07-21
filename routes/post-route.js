@@ -15,6 +15,7 @@ const {
   getPostById,
   addComment,
   deleteComment,
+  likePost,
 } = require('../controllers/post-controller');
 
 const MIME_TYPE_MAP = {
@@ -51,6 +52,10 @@ router.route('/new/image').post(
   uploadImage
 );
 
+// Like/unlike
+router.route('/:postId/like').get(auth, likePost);
+
+// Comments
 router.route('/:postId/comment').post(auth, addComment);
 router.route('/:postId/comment/:commentId').delete(auth, deleteComment);
 

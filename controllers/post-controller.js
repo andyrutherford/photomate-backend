@@ -254,7 +254,6 @@ exports.addComment = async (req, res, next) => {
 // @desc    Delete comment
 // @route   DELETE /api/v1/post/:postId/:commentId
 // @access  PRIVATE
-
 exports.deleteComment = async (req, res, next) => {
   const userId = req.user.id;
   const { postId, commentId } = req.params;
@@ -322,4 +321,41 @@ exports.deleteComment = async (req, res, next) => {
     console.log('error: ', error.message);
     res.send(error.message);
   }
+};
+
+// @desc    Like/unlike post
+// @route   GET /api/v1/post/:postId/like
+// @access  PRIVATE
+exports.likePost = async (req, res, next) => {
+  const userId = req.user.id;
+  const { postId } = req.params;
+
+  // Ensure proper object id
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid post ID.' });
+  }
+
+  let post = await Post.findById(postId).select('likes likeCount');
+  if (!post) {
+    return res.status(404).json({
+      success: false,
+      message: 'Post not found.',
+    });
+  }
+  let action;
+  if (post.likes.includes(userId)) {
+    post.likes = post.likes.filter((user) => user.toString() !== userId);
+    post.likeCount--;
+    action = 'unlike';
+  } else {
+    post.likes.unshift(userId);
+    post.likeCount++;
+    action = 'like';
+  }
+
+  await post.save();
+
+  res.json({ success: true, message: `You ${action} post ${postId}.`, post });
 };
