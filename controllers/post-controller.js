@@ -6,6 +6,35 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
 
+// @desc    Get all posts (Feed)
+// @route   GET /api/v1/post/feed
+// @access  PRIVATE
+exports.getFeed = async (req, res, next) => {
+  try {
+    const feed = await Post.find()
+      .select('likeCount caption image createdAt')
+      .populate({
+        path: 'user',
+        select: 'username avatar',
+      })
+      .populate({
+        path: 'comments',
+        select: 'text',
+        populate: {
+          path: 'user',
+          select: 'username avatar',
+        },
+      });
+    res.status(200).json({
+      success: true,
+      feed,
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
+
 // @desc    Get user posts
 // @route   GET /api/v1/post
 // @access  PRIVATE
@@ -337,25 +366,30 @@ exports.likePost = async (req, res, next) => {
       .json({ success: false, message: 'Invalid post ID.' });
   }
 
-  let post = await Post.findById(postId).select('likes likeCount');
-  if (!post) {
-    return res.status(404).json({
-      success: false,
-      message: 'Post not found.',
-    });
-  }
-  let action;
-  if (post.likes.includes(userId)) {
-    post.likes = post.likes.filter((user) => user.toString() !== userId);
-    post.likeCount--;
-    action = 'unlike';
-  } else {
-    post.likes.unshift(userId);
-    post.likeCount++;
-    action = 'like';
-  }
+  try {
+    let post = await Post.findById(postId).select('likes likeCount');
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: 'Post not found.',
+      });
+    }
+    let action;
+    if (post.likes.includes(userId)) {
+      post.likes = post.likes.filter((user) => user.toString() !== userId);
+      post.likeCount--;
+      action = 'unlike';
+    } else {
+      post.likes.unshift(userId);
+      post.likeCount++;
+      action = 'like';
+    }
 
-  await post.save();
+    await post.save();
 
-  res.json({ success: true, message: `You ${action} post ${postId}.`, post });
+    res.json({ success: true, message: `You ${action} post ${postId}.`, post });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
 };

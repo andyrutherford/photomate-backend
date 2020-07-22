@@ -8,6 +8,7 @@ const auth = require('../middleware/auth');
 const {
   uploadImage,
   createPost,
+  getFeed,
   getUserPosts,
   getPostsByUsername,
   deleteAllUserPosts,
@@ -25,6 +26,7 @@ const MIME_TYPE_MAP = {
 };
 
 router.route('/').get(auth, getUserPosts);
+router.route('/feed').get(auth, getFeed);
 router.route('/:postId').get(auth, getPostById);
 router.route('/:postId').delete(auth, deletePostById);
 router.route('/').delete(auth, deleteAllUserPosts);
