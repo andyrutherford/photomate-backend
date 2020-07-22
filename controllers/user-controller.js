@@ -118,7 +118,7 @@ exports.updateAvatar = async (req, res, next) => {
 };
 
 // @desc    Delete user
-// @route   Delete /api/v1/user
+// @route   DELETE /api/v1/user
 // @access  PRIVATE
 exports.deleteUser = async (req, res, next) => {
   // Delete user object
@@ -142,6 +142,29 @@ exports.deleteUser = async (req, res, next) => {
       success: true,
       message: `User ${user.username} and ${posts.deletedCount} posts have been deleted.`,
     });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
+
+// @desc    Get suggested users
+// @route   GET /api/v1/user/suggested
+// @access  PRIVATE
+exports.getSuggestedUsers = async (req, res, next) => {
+  const username = req.user.username;
+  try {
+    let users = await User.find({}).select('username name avatar ');
+    users = users.filter((user) => user.username !== username);
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+    const suggestedUsers = shuffleArray(users).slice(0, 5);
+    res.json({ success: true, suggestedUsers });
   } catch (error) {
     console.log(error.message);
     res.send(error.message);

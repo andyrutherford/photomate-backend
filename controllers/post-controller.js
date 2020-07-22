@@ -12,7 +12,7 @@ const Comment = require('../models/Comment');
 exports.getFeed = async (req, res, next) => {
   try {
     const feed = await Post.find()
-      .select('likeCount caption image createdAt')
+      .select('likeCount likes caption image createdAt')
       .populate({
         path: 'user',
         select: 'username avatar',
