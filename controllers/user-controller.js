@@ -24,7 +24,9 @@ exports.getUserById = async (req, res, next) => {
   try {
     let user = await User.findOne({
       username,
-    }).select('profile email name username avatar posts followers following');
+    }).select(
+      'profile email name username avatar posts followers followerCount following followingCount'
+    );
 
     if (!user) {
       res.status(400).json({
@@ -165,6 +167,64 @@ exports.getSuggestedUsers = async (req, res, next) => {
     }
     const suggestedUsers = shuffleArray(users).slice(0, 5);
     res.json({ success: true, suggestedUsers });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
+
+// @desc    Follow user
+// @route   GET /api/v1/user/follow/:username
+// @access  PRIVATE
+exports.followUser = async (req, res, next) => {
+  const username = req.params.username;
+  try {
+    // Ensure user is not trying to follow themself
+    let requestingUser = await User.findById(req.user.id);
+    let userToFollow = await User.findOne({ username });
+    if (!userToFollow) {
+      return res.status(404).json({
+        success: false,
+        message: 'User does not exist.',
+      });
+    }
+    if (requestingUser.username === userToFollow.username) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot follow yourself.',
+      });
+    }
+
+    let action;
+
+    // If user is already being followed, then unfollow
+    if (requestingUser.following.includes(userToFollow._id.toString())) {
+      requestingUser.following = requestingUser.following.filter(
+        (user) => user.toString() !== userToFollow._id.toString()
+      );
+      requestingUser.followingCount--;
+
+      userToFollow.followers = userToFollow.followers.filter(
+        (user) => user.toString() !== requestingUser._id.toString()
+      );
+      userToFollow.followerCount--;
+      action = 'unfollowed';
+    } else {
+      requestingUser.following.push(userToFollow._id.toString());
+      requestingUser.followingCount++;
+
+      userToFollow.followers.push(requestingUser._id.toString());
+      userToFollow.followerCount++;
+      action = 'are now following';
+    }
+
+    await userToFollow.save();
+    await requestingUser.save();
+    res.status(200).json({
+      success: true,
+      message: `You are now ${action} ${userToFollow.username}.`,
+      requestingUser,
+    });
   } catch (error) {
     console.log(error.message);
     res.send(error.message);

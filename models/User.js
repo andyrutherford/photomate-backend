@@ -32,14 +32,16 @@ const UserSchema = mongoose.Schema({
       'https://res.cloudinary.com/dec2xrpad/image/upload/v1594949863/avatar.png',
   },
   posts: [{ type: mongoose.Schema.ObjectId, ref: 'Post' }],
-  followers: {
+  followerCount: {
     type: Number,
     default: 0,
   },
-  following: {
+  followers: [{ type: mongoose.Schema.ObjectId, ref: 'User ' }],
+  followingCount: {
     type: Number,
     default: 0,
   },
+  following: [{ type: mongoose.Schema.ObjectId, ref: 'User ' }],
   profile: {
     website: {
       type: String,
