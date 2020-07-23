@@ -36,12 +36,12 @@ const UserSchema = mongoose.Schema({
     type: Number,
     default: 0,
   },
-  followers: [{ type: mongoose.Schema.ObjectId, ref: 'User ' }],
+  followers: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   followingCount: {
     type: Number,
     default: 0,
   },
-  following: [{ type: mongoose.Schema.ObjectId, ref: 'User ' }],
+  following: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
   profile: {
     website: {
       type: String,

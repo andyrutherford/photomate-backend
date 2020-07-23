@@ -24,20 +24,37 @@ exports.getUserById = async (req, res, next) => {
   try {
     let user = await User.findOne({
       username,
-    }).select(
-      'profile email name username avatar posts followers followerCount following followingCount'
-    );
+    })
+      .select(
+        'profile email name username avatar posts followerCount followingCount'
+      )
+      .populate({
+        path: 'following',
+        select: 'username avatar name',
+      })
+      .populate({
+        path: 'followers',
+        select: 'username avatar name',
+      });
 
     if (!user) {
       res.status(400).json({
         success: false,
         message: 'User not found.',
       });
-    } else
-      return res.status(200).json({
-        success: true,
-        user,
-      });
+    }
+    let youAreFollowing = false;
+    if (
+      user.followers.length > 0 &&
+      user.followers.filter((u) => u.username === req.user.username)
+    ) {
+      youAreFollowing = true;
+    }
+    return res.status(200).json({
+      success: true,
+      youAreFollowing,
+      user,
+    });
   } catch (error) {
     console.log(error.message);
   }
@@ -196,7 +213,7 @@ exports.followUser = async (req, res, next) => {
     }
 
     let action;
-
+    let type;
     // If user is already being followed, then unfollow
     if (requestingUser.following.includes(userToFollow._id.toString())) {
       requestingUser.following = requestingUser.following.filter(
@@ -209,6 +226,7 @@ exports.followUser = async (req, res, next) => {
       );
       userToFollow.followerCount--;
       action = 'unfollowed';
+      type = 'unfollow';
     } else {
       requestingUser.following.push(userToFollow._id.toString());
       requestingUser.followingCount++;
@@ -216,12 +234,14 @@ exports.followUser = async (req, res, next) => {
       userToFollow.followers.push(requestingUser._id.toString());
       userToFollow.followerCount++;
       action = 'are now following';
+      type = 'follow';
     }
 
     await userToFollow.save();
     await requestingUser.save();
     res.status(200).json({
       success: true,
+      type,
       message: `You are now ${action} ${userToFollow.username}.`,
       requestingUser,
     });

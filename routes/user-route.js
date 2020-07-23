@@ -25,7 +25,7 @@ router.route('/').put(auth, updateProfile);
 router.route('/').delete(auth, deleteUser);
 router.route('/suggested').get(auth, getSuggestedUsers);
 router.route('/follow/:username').get(auth, followUser);
-router.route('/:username').get(getUserById);
+router.route('/:username').get(auth, getUserById);
 router.route('/avatar').put(
   auth,
   multer({
