@@ -395,7 +395,19 @@ exports.likePost = async (req, res, next) => {
   }
 };
 
-exports.getSavedPosts = async (req, res, next) => {};
+exports.getSavedPosts = async (req, res, next) => {
+  const userId = req.user.id;
+  try {
+    let user = await User.findById(userId).select('username').populate({
+      path: 'savedPosts',
+      select: 'image likes likeCount commentCount',
+    });
+
+    res.send(user);
+  } catch (error) {
+    res.send(error.message);
+  }
+};
 
 exports.savePost = async (req, res, next) => {
   const userId = req.user.id;
@@ -410,7 +422,7 @@ exports.savePost = async (req, res, next) => {
 
   try {
     let user = await User.findById(userId).select('savedPosts');
-
+    console.log(user);
     if (user.savedPosts.includes(postId)) {
       user.savedPosts = user.savedPosts.filter(
         (post) => postId !== post.toString()
@@ -418,6 +430,7 @@ exports.savePost = async (req, res, next) => {
     } else {
       user.savedPosts.push(postId);
     }
+
     await user.save();
     res.status(200).json({
       success: true,

@@ -17,6 +17,7 @@ const {
   addComment,
   deleteComment,
   likePost,
+  getSavedPosts,
   savePost,
 } = require('../controllers/post-controller');
 
@@ -28,6 +29,7 @@ const MIME_TYPE_MAP = {
 
 router.route('/').get(auth, getUserPosts);
 router.route('/feed').get(auth, getFeed);
+router.route('/saved').get(auth, getSavedPosts);
 router.route('/:postId').get(auth, getPostById);
 router.route('/:postId').delete(auth, deletePostById);
 router.route('/').delete(auth, deleteAllUserPosts);
