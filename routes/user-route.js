@@ -12,6 +12,7 @@ const {
   deleteUser,
   getSuggestedUsers,
   followUser,
+  resetFollowerFollowing,
 } = require('../controllers/user-controller');
 
 const MIME_TYPE_MAP = {
@@ -25,6 +26,7 @@ router.route('/').put(auth, updateProfile);
 router.route('/').delete(auth, deleteUser);
 router.route('/suggested').get(auth, getSuggestedUsers);
 router.route('/follow/:username').get(auth, followUser);
+router.route('/follow-reset').get(auth, resetFollowerFollowing);
 router.route('/:username').get(auth, getUserById);
 router.route('/avatar').put(
   auth,

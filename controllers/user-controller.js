@@ -250,3 +250,19 @@ exports.followUser = async (req, res, next) => {
     res.send(error.message);
   }
 };
+
+exports.resetFollowerFollowing = async (req, res, next) => {
+  try {
+    let user = await User.findById(req.user.id).select('-password');
+    user.followers = [];
+    user.following = [];
+    user.followerCount = 0;
+    user.followingCount = 0;
+    await user.save();
+
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
