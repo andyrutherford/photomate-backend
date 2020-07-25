@@ -10,6 +10,7 @@ const Comment = require('../models/Comment');
 // @route   GET /api/v1/post/feed
 // @access  PRIVATE
 exports.getFeed = async (req, res, next) => {
+  // TODO: populate saved post status for each post
   try {
     const feed = await Post.find()
       .select('likeCount likes caption image createdAt')
@@ -390,6 +391,39 @@ exports.likePost = async (req, res, next) => {
     res.json({ success: true, message: `You ${action} post ${postId}.`, post });
   } catch (error) {
     console.log(error.message);
+    res.send(error.message);
+  }
+};
+
+exports.getSavedPosts = async (req, res, next) => {};
+
+exports.savePost = async (req, res, next) => {
+  const userId = req.user.id;
+  const { postId } = req.params;
+
+  // Ensure proper object id
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Invalid post ID.' });
+  }
+
+  try {
+    let user = await User.findById(userId).select('savedPosts');
+
+    if (user.savedPosts.includes(postId)) {
+      user.savedPosts = user.savedPosts.filter(
+        (post) => postId !== post.toString()
+      );
+    } else {
+      user.savedPosts.push(postId);
+    }
+    await user.save();
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
     res.send(error.message);
   }
 };

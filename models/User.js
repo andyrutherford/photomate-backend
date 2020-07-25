@@ -42,6 +42,7 @@ const UserSchema = mongoose.Schema({
     default: 0,
   },
   following: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
+  savedPosts: [{ type: mongoose.Schema.ObjectId, ref: 'Post' }],
   profile: {
     website: {
       type: String,
