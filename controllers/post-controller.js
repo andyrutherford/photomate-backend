@@ -11,7 +11,20 @@ const Comment = require('../models/Comment');
 // @access  PRIVATE
 exports.getFeed = async (req, res, next) => {
   // TODO: populate saved post status for each post
+  const username = req.user.username;
+
   try {
+    let users = await User.find({}).select('username name avatar');
+    users = users.filter((user) => user.username !== username);
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+    const suggestedUsers = shuffleArray(users).slice(0, 5);
+
     const feed = await Post.find()
       .select('likeCount likes caption image createdAt')
       .populate({
@@ -29,6 +42,7 @@ exports.getFeed = async (req, res, next) => {
     res.status(200).json({
       success: true,
       feed,
+      suggestedUsers,
     });
   } catch (error) {
     console.log(error.message);
@@ -388,13 +402,21 @@ exports.likePost = async (req, res, next) => {
 
     await post.save();
 
-    res.json({ success: true, message: `You ${action} post ${postId}.`, post });
+    res.json({
+      success: true,
+      message: `You ${action} post ${postId}.`,
+      user: userId,
+      post,
+    });
   } catch (error) {
     console.log(error.message);
     res.send(error.message);
   }
 };
 
+// @desc    Get users saved posts
+// @route   GET /api/v1/post/saved
+// @access  PRIVATE
 exports.getSavedPosts = async (req, res, next) => {
   const userId = req.user.id;
   try {
@@ -409,6 +431,9 @@ exports.getSavedPosts = async (req, res, next) => {
   }
 };
 
+// @desc    Save/Unsave post
+// @route   GET /api/v1/post/:postId/save
+// @access  PRIVATE
 exports.savePost = async (req, res, next) => {
   const userId = req.user.id;
   const { postId } = req.params;
