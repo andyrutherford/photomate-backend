@@ -20,7 +20,6 @@ const UserSchema = mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
   },
   createdAt: {
     type: Date,
@@ -63,6 +62,9 @@ const UserSchema = mongoose.Schema({
       enum: ['', 'male', 'female', 'other'],
       default: '',
     },
+  },
+  githubId: {
+    type: Number,
   },
 });
 
