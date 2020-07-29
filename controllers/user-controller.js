@@ -26,7 +26,7 @@ exports.getUserById = async (req, res, next) => {
       username,
     })
       .select(
-        'profile email name username avatar posts followerCount followingCount'
+        'profile email name username avatar posts followerCount followingCount verified'
       )
       .populate({
         path: 'following',
