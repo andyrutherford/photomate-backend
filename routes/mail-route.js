@@ -11,8 +11,12 @@ const auth = require('../middleware/auth');
 // const { updatePassword } = require('../controllers/email-controller');
 // router.route('/update').put(updatePassword);
 
-const { verifyUser } = require('../controllers/mail-controller');
-router.route('/verify').put(auth, verifyUser);
+const {
+  requestVerification,
+  confirmVerification,
+} = require('../controllers/mail-controller');
+router.route('/verify').put(auth, requestVerification);
+router.route('/verify/:token').get(auth, confirmVerification);
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SMTP,
