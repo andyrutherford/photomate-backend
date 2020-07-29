@@ -66,6 +66,13 @@ const UserSchema = mongoose.Schema({
   githubId: {
     type: Number,
   },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  verifiedToken: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('User', UserSchema);
