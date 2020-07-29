@@ -14,9 +14,12 @@ const auth = require('../middleware/auth');
 const {
   requestVerification,
   confirmVerification,
+  forgotPassword,
+  resetPassword,
 } = require('../controllers/mail-controller');
 router.route('/verify').put(auth, requestVerification);
 router.route('/verify/:token').get(auth, confirmVerification);
+router.route('/forgot-password').post(forgotPassword);
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SMTP,
