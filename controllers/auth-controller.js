@@ -102,6 +102,70 @@ exports.login = async (req, res, next) => {
   }
 };
 
+// @desc    Change password
+// @route   PUT /api/v1/auth
+// @access  PRIVATE
+exports.changePassword = async (req, res, next) => {
+  if (!req.body.oldPassword || !req.body.newPassword) {
+    return res.status(400).json({
+      success: false,
+      message: 'The old password and new password are required.',
+    });
+  }
+  try {
+    let user = await User.findById(req.user.id);
+    if (user.githubId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'The password cannot be changed because this account is connected with Github.',
+      });
+    }
+
+    const isMatch = await bcrypt.compare(req.body.oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your old password is incorrect.',
+      });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const newPassword = await bcrypt.hash(req.body.newPassword, salt);
+
+    user.password = newPassword;
+
+    await user.save();
+
+    const payload = {
+      user: {
+        email: user.email,
+        username: user.username,
+        id: user.id,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      {
+        expiresIn: 360000,
+      },
+      (err, token) => {
+        if (err) throw err;
+        res.status(200).json({
+          success: true,
+          email: req.user.email,
+          username: req.user.username,
+          token,
+        });
+      }
+    );
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
+
 // @desc    Load user
 // @route   GET /api/v1/auth
 // @access  PRIVATE
@@ -121,7 +185,7 @@ exports.loadUser = async (req, res, next) => {
   }
 };
 
-// @desc    Authenticated with Github
+// @desc    Authenticate with Github
 // @route   GET /api/v1/auth/github
 // @access  PUBLIC
 exports.githubAuth = async (req, res, next) => {

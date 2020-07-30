@@ -112,7 +112,7 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message:
-          'The password cannot be changed because this account is connected with Github',
+          'The password cannot be changed because this account is connected with Github.',
       });
     }
     const token = crypto.randomBytes(20).toString('hex');
