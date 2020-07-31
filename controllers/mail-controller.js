@@ -105,14 +105,14 @@ exports.forgotPassword = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'A user with this email address was not found.',
+        message: 'A user with that email address was not found.',
       });
     }
     if (user.githubId) {
       return res.status(400).json({
         success: false,
         message:
-          'The password cannot be changed because this account is connected with Github.',
+          'The password cannot be reset because this account is connected with Github.',
       });
     }
     const token = crypto.randomBytes(20).toString('hex');
@@ -122,8 +122,8 @@ exports.forgotPassword = async (req, res, next) => {
 
     const mailURL =
       process.env.NODE_ENV === 'development'
-        ? `http://localhost:3000/forgot-password/${token}`
-        : `${process.env.PRODUCTION_URL}/forgot-password/${token}`;
+        ? `http://localhost:3000/reset-password/${token}`
+        : `${process.env.PRODUCTION_URL}/reset-password/${token}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,

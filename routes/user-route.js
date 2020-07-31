@@ -13,6 +13,8 @@ const {
   getSuggestedUsers,
   followUser,
   resetFollowerFollowing,
+  requestResetPassword,
+  resetPassword,
 } = require('../controllers/user-controller');
 
 const MIME_TYPE_MAP = {
@@ -25,6 +27,8 @@ router.route('/').get(auth, getProfile);
 router.route('/').put(auth, updateProfile);
 router.route('/').delete(auth, deleteUser);
 router.route('/suggested').get(auth, getSuggestedUsers);
+router.route('/reset-password').get(requestResetPassword);
+router.route('/reset-password').post(resetPassword);
 router.route('/follow/:username').get(auth, followUser);
 router.route('/follow-reset').get(auth, resetFollowerFollowing);
 router.route('/:username').get(auth, getUserById);

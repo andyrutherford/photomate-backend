@@ -266,3 +266,43 @@ exports.resetFollowerFollowing = async (req, res, next) => {
     res.send(error.message);
   }
 };
+
+// @desc    Request reset password
+// @route   GET /api/v1/user/reset-password
+// @access  PUBLIC
+exports.requestResetPassword = async (req, res, next) => {
+  console.log(req.query);
+  if (!req.query) {
+    return res.status(400).json({
+      success: false,
+      message:
+        'This link is either broken or expired.  Please try again later.',
+    });
+  }
+  const token = req.query.token;
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+    });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message:
+          'This link is either broken or expired.  Please try again later.',
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      user: user.email,
+      message: 'Please reset your password.',
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.send(error.message);
+  }
+};
+
+// @desc    Reset password
+// @route   POST /api/v1/user/reset-password
+// @access  PUBLIC
+exports.resetPassword = async (req, res, next) => {};
