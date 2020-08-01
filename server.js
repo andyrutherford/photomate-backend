@@ -40,6 +40,22 @@ app.use('/api/v1/user', user);
 app.use('/api/v1/post', post);
 app.use('/api/v1/mail', mail);
 
+// Error handling middleware
+app.use((error, req, res, next) => {
+  if (req.file) {
+    fs.unlink(req.file.path, (error) => {
+      console.log(error);
+    });
+  }
+  if (res.headerSent) {
+    return next(error);
+  }
+  res.status(error.code || 500).json({
+    success: error.success,
+    message: error.message || 'An unknown error occurred.',
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(

@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 
+const HttpError = require('../models/HttpError');
+
 // @desc    Signup user
 // @route   POST /api/v1/auth/signup
 // @access  PUBLIC
@@ -63,15 +65,20 @@ exports.login = async (req, res, next) => {
       // Log in with username
       user = await User.findOne({ username: userID });
       if (!user) {
-        res.status(500).send('Server Error');
+        const error = new HttpError(
+          'A problem occurred.  Please try again later.',
+          500
+        );
+        return next(error);
       }
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials.  Please try again.',
-      });
+      const error = new HttpError(
+        'Invalid credentials.  Please try again.',
+        401
+      );
+      return next(error);
     }
     //   Generate new JWT payload
     const payload = {
@@ -97,8 +104,9 @@ exports.login = async (req, res, next) => {
         });
       }
     );
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -107,27 +115,26 @@ exports.login = async (req, res, next) => {
 // @access  PRIVATE
 exports.changePassword = async (req, res, next) => {
   if (!req.body.oldPassword || !req.body.newPassword) {
-    return res.status(400).json({
-      success: false,
-      message: 'The old password and new password are required.',
-    });
+    const error = new HttpError(
+      'The old password and new password are required',
+      400
+    );
+    return next(error);
   }
   try {
     let user = await User.findById(req.user.id);
     if (user.githubId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'The password cannot be changed because this account is connected with Github.',
-      });
+      const error = new HttpError(
+        'The password cannot be changed because this account is connected with Github.',
+        400
+      );
+      return next(error);
     }
 
     const isMatch = await bcrypt.compare(req.body.oldPassword, user.password);
     if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'Your old password is incorrect.',
-      });
+      const error = new HttpError('Your old password is incorrect.', 400);
+      return next(error);
     }
     const salt = await bcrypt.genSalt(10);
     const newPassword = await bcrypt.hash(req.body.newPassword, salt);
@@ -160,9 +167,9 @@ exports.changePassword = async (req, res, next) => {
         });
       }
     );
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -179,9 +186,9 @@ exports.loadUser = async (req, res, next) => {
       name: user.name,
       avatar: user.avatar,
     });
-  } catch (error) {
-    res.status(500).send('Server error');
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError('Server error', 500);
+    return next(error);
   }
 };
 
@@ -191,7 +198,8 @@ exports.loadUser = async (req, res, next) => {
 exports.githubAuth = async (req, res, next) => {
   const { code, state } = req.body;
   if (!state || !code) {
-    return res.status(400).send('A code and state is required');
+    const error = new HttpError('Code and state are required.', 400);
+    return next(error);
   }
   try {
     const github = await axios.post(
@@ -203,16 +211,12 @@ exports.githubAuth = async (req, res, next) => {
         state,
       }
     );
-    console.log(github.data);
     const accessToken = github.data.split('=')[1].split('&')[0];
-    console.log(accessToken);
 
     // Get users github profile
     const githubUser = await axios.get('https://api.github.com/user', {
       headers: { Authorization: `token ${accessToken}` },
     });
-
-    console.log(githubUser.data);
 
     // Get users github email
     const githubEmails = await axios.get('https://api.github.com/user/emails', {
@@ -253,7 +257,11 @@ exports.githubAuth = async (req, res, next) => {
       $or: [{ email: primaryEmail }, { username: githubUser.data.login }],
     });
     if (userExists) {
-      return res.send('A user with this email or username already exists');
+      const error = new HttpError(
+        'A user with this email or username already exists.',
+        400
+      );
+      return next(error);
     }
 
     const newUser = new User({
@@ -289,8 +297,8 @@ exports.githubAuth = async (req, res, next) => {
         });
       }
     );
-  } catch (error) {
-    console.log(error.message);
-    res.send('Auth error');
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };

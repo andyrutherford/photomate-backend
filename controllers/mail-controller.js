@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 
+const HttpError = require('../models/HttpError');
+
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   auth: {
@@ -43,16 +45,16 @@ exports.requestVerification = async (req, res, next) => {
 
     transporter.sendMail(mailOptions, (err, response) => {
       if (err) {
-        console.error('error: ', err);
+        console.error(err);
       } else {
         res
           .status(200)
           .json({ success: true, message: 'Verification email sent.' });
       }
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -61,23 +63,22 @@ exports.confirmVerification = async (req, res, next) => {
   try {
     let user = await User.findById(req.user.id);
     if (user.verified) {
-      return res.status(400).json({
-        success: false,
-        message: 'You are already verified.',
-      });
+      const error = new HttpError('You are already verified.', 400);
+      return next(error);
     }
     if (!user.verifiedToken) {
-      return res.status(400).json({
-        success: false,
-        message: 'You have not requested to become verified.',
-      });
+      const error = new HttpError(
+        'You have not requested to become verified.',
+        400
+      );
+      return next(error);
     }
     if (user.verifiedToken !== token) {
-      return res.status(401).json({
-        success: false,
-        message:
-          'Token wrong or expired.  Please request to become verified again.',
-      });
+      const error = new HttpError(
+        'Token is wrong or expired.  Please request to become verified again.',
+        401
+      );
+      return next(error);
     }
 
     user.verified = true;
@@ -88,32 +89,29 @@ exports.confirmVerification = async (req, res, next) => {
       success: true,
       message: 'You are now verified.',
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
 exports.forgotPassword = async (req, res, next) => {
   if (!req.body.email) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'An email is required.' });
+    const error = new HttpError('An email address is required.', 400);
+    return next(error);
   }
   try {
     let user = await User.findOne({ email: req.body.email });
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'A user with that email address was not found.',
-      });
+      const error = new HttpError('A user with that email was not found.', 404);
+      return next(error);
     }
     if (user.githubId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'The password cannot be reset because this account is connected with Github.',
-      });
+      const error = new HttpError(
+        'The password cannot be reset because this account is connected with Github.',
+        403
+      );
+      return next(error);
     }
     const token = crypto.randomBytes(20).toString('hex');
     user.resetPasswordToken = token;
@@ -146,8 +144,8 @@ exports.forgotPassword = async (req, res, next) => {
         });
       }
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };

@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
 const Post = require('../models/Post');
+const HttpError = require('../models/HttpError');
 
 // @desc    Get user profile
 // @route   GET /api/v1/user
@@ -13,8 +14,9 @@ exports.getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.status(200).json(user);
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -40,10 +42,8 @@ exports.getUserById = async (req, res, next) => {
       });
 
     if (!user) {
-      res.status(400).json({
-        success: false,
-        message: 'User not found.',
-      });
+      const error = new HttpError('User not found.', 404);
+      return next(error);
     }
     let youAreFollowing = false;
     if (
@@ -57,8 +57,9 @@ exports.getUserById = async (req, res, next) => {
       youAreFollowing,
       user,
     });
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -81,8 +82,9 @@ exports.updateProfile = async (req, res, next) => {
       success: true,
       user,
     });
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -105,8 +107,9 @@ exports.updateProfile = async (req, res, next) => {
       success: true,
       user,
     });
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -115,7 +118,8 @@ exports.updateProfile = async (req, res, next) => {
 // @access  PRIVATE
 exports.updateAvatar = async (req, res, next) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'An image is required.' });
+    const error = new HttpError('An image is required.', 400);
+    return next(error);
   }
 
   try {
@@ -134,7 +138,8 @@ exports.updateAvatar = async (req, res, next) => {
 
     return res.json({ success: true, avatar: response.secure_url });
   } catch (err) {
-    res.send(err.message);
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -149,9 +154,8 @@ exports.deleteUser = async (req, res, next) => {
   try {
     let user = await User.findById(userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'User not found.' });
+      const error = new HttpError('User not found', 404);
+      return next(error);
     }
     const posts = await Post.deleteMany({
       user: req.user.id,
@@ -163,9 +167,9 @@ exports.deleteUser = async (req, res, next) => {
       success: true,
       message: `User ${user.username} and ${posts.deletedCount} posts have been deleted.`,
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -186,9 +190,9 @@ exports.getSuggestedUsers = async (req, res, next) => {
     }
     const suggestedUsers = shuffleArray(users).slice(0, 5);
     res.json({ success: true, suggestedUsers });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -202,16 +206,12 @@ exports.followUser = async (req, res, next) => {
     let requestingUser = await User.findById(req.user.id);
     let userToFollow = await User.findOne({ username });
     if (!userToFollow) {
-      return res.status(404).json({
-        success: false,
-        message: 'User does not exist.',
-      });
+      const error = new HttpError('User does not exist.', 404);
+      return next(error);
     }
     if (requestingUser.username === userToFollow.username) {
-      return res.status(400).json({
-        success: false,
-        message: 'You cannot follow yourself.',
-      });
+      const error = new HttpError('You cannot follow yourself.', 403);
+      return next(error);
     }
 
     let action;
@@ -247,9 +247,9 @@ exports.followUser = async (req, res, next) => {
       message: `You are now ${action} ${userToFollow.username}.`,
       requestingUser,
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -263,9 +263,9 @@ exports.resetFollowerFollowing = async (req, res, next) => {
     await user.save();
 
     res.status(200).json({ success: true, user });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -274,11 +274,11 @@ exports.resetFollowerFollowing = async (req, res, next) => {
 // @access  PUBLIC
 exports.requestResetPassword = async (req, res, next) => {
   if (!req.query) {
-    return res.status(400).json({
-      success: false,
-      message:
-        'This link is either broken or expired.  Please try again later.',
-    });
+    const error = new HttpError(
+      'This link is either broken or expired.  Please try again in a few minutes.',
+      400
+    );
+    return next(error);
   }
   const token = req.query.token;
   try {
@@ -286,20 +286,20 @@ exports.requestResetPassword = async (req, res, next) => {
       resetPasswordToken: token,
     });
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message:
-          'This link is either broken or expired.  Please try again later.',
-      });
+      const error = new HttpError(
+        'This link is either broken or expired.  Please try again in a few minutes.',
+        404
+      );
+      return next(error);
     }
     return res.status(200).json({
       success: true,
       user: user.email,
       message: 'Please reset your password.',
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -309,31 +309,30 @@ exports.requestResetPassword = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   const { token, password } = req.body;
   if (!token || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'A token and password are required.' });
+    const error = new HttpError('A token and password are required.', 400);
+    return next(error);
   }
   if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: 'The password must be at least 6 characters.',
-    });
+    const error = new HttpError(
+      'The password must be at least 6 characters.',
+      400
+    );
+    return next(error);
   }
   try {
     let user = await User.findOne({
       resetPasswordToken: token,
     });
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'User not found.' });
+      const error = new HttpError('User not found.', 404);
+      return next(error);
     }
     if (user.githubId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'The password cannot be reset because this account is connected with Github.',
-      });
+      const error = new HttpError(
+        'The password cannot be reset because this account is connected with Github.',
+        403
+      );
+      return next(error);
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -341,12 +340,15 @@ exports.resetPassword = async (req, res, next) => {
 
     user.password = newPassword;
     user.resetPasswordToken = undefined;
-    // await user.save();
+    await user.save();
 
     res.status(200).json({
       success: true,
       message:
         'Reset password successful.  You may now log in with your new password.',
     });
-  } catch (error) {}
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
+  }
 };

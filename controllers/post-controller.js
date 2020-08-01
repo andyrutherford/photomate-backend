@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
+const HttpError = require('../models/HttpError');
 
 // @desc    Get all posts (Feed)
 // @route   GET /api/v1/post/feed
@@ -44,9 +45,9 @@ exports.getFeed = async (req, res, next) => {
       feed,
       suggestedUsers,
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -59,8 +60,9 @@ exports.getUserPosts = async (req, res, next) => {
     res
       .status(200)
       .json({ success: true, user: req.user.username, posts: posts.reverse() });
-  } catch (error) {
-    console.log(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -71,9 +73,8 @@ exports.getPostById = async (req, res, next) => {
   const postId = req.params.postId;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid post ID.' });
+    const error = new HttpError('Invalid post Id.', 400);
+    return next(error);
   }
 
   try {
@@ -91,15 +92,14 @@ exports.getPostById = async (req, res, next) => {
         select: 'username avatar',
       });
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Post not found.' });
+      const error = new HttpError('Post not found.', 404);
+      return next(error);
     }
 
     res.status(200).json({ success: true, post });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -112,14 +112,16 @@ exports.getPostsByUsername = async (req, res, next) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      return res.send('User doesnt exist');
+      const error = new HttpError('User not found.', 404);
+      return next(error);
     }
     const posts = await Post.find({ user: user._id });
     res
       .status(200)
       .json({ success: true, user: username, posts: posts.reverse() });
-  } catch (error) {
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -141,17 +143,10 @@ exports.createPost = async (req, res, next) => {
     });
 
     return res.status(201).json({ success: true, post });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
-
-  res.json({
-    success: true,
-    user: req.user.id,
-    imageUrl,
-    caption,
-  });
 };
 
 // @desc    Upload post image
@@ -159,7 +154,8 @@ exports.createPost = async (req, res, next) => {
 // @access  PRIVATE
 exports.uploadImage = async (req, res, next) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'An image is required.' });
+    const error = new HttpError('An image is required.', 400);
+    return next(error);
   }
 
   try {
@@ -169,8 +165,9 @@ exports.uploadImage = async (req, res, next) => {
     fs.unlinkSync(req.file.path);
 
     return res.status(200).json({ success: true, image: response.secure_url });
-  } catch (error) {
-    res.status(500).send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -181,9 +178,8 @@ exports.deletePostById = async (req, res, next) => {
   const { postId } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid post ID.' });
+    const error = new HttpError('Invalid post Id.', 400);
+    return next(error);
   }
 
   try {
@@ -191,17 +187,17 @@ exports.deletePostById = async (req, res, next) => {
 
     // Make sure post exists
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Post not found.' });
+      const error = new HttpError('Post not found', 404);
+      return next(error);
     }
 
     // Make sure user deleting the post is user that created the post
     if (post.user.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not authorized to delete this post.',
-      });
+      const error = new HttpError(
+        'You are not allowed to delete this post.',
+        403
+      );
+      return next(error);
     }
 
     await User.findByIdAndUpdate(req.user.id, {
@@ -213,9 +209,9 @@ exports.deletePostById = async (req, res, next) => {
       success: true,
       message: 'Post ' + postId + ' has been deleted.',
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -235,9 +231,9 @@ exports.deleteAllUserPosts = async (req, res, next) => {
       user: user.username,
       postsDeleted: posts.deletedCount,
     });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -250,25 +246,22 @@ exports.addComment = async (req, res, next) => {
   const user = req.user.id;
 
   if (!text) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'A comment is required.' });
+    const error = new HttpError('A comment is required', 400);
+    return next(error);
   }
 
   // Ensure proper object id
   if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid post ID.' });
+    const error = new HttpError('Invalid post Id.', 400);
+    return next(error);
   }
 
   try {
     let post = await Post.findById(postId);
 
     if (!post) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Post not found.' });
+      const error = new HttpError('Post not found.', 404);
+      return next(error);
     }
     let comment = await Comment.create({
       text,
@@ -289,9 +282,9 @@ exports.addComment = async (req, res, next) => {
       sucess: true,
       comment,
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -302,53 +295,47 @@ exports.deleteComment = async (req, res, next) => {
   const userId = req.user.id;
   const { postId, commentId } = req.params;
 
-  if (!postId)
-    return res
-      .status(400)
-      .json({ success: false, message: 'A postId is required.' });
+  if (!postId) {
+    const error = new HttpError('A post Id is required', 400);
+    return next(error);
+  }
 
-  if (!commentId)
-    return res
-      .status(400)
-      .json({ success: false, message: 'A commentId is required.' });
+  if (!commentId) {
+    const error = new HttpError('A comment Id is required.', 400);
+    return next(error);
+  }
 
   // Ensure proper object id
   if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid post ID.' });
+    const error = new HttpError('Invalid post Id.', 400);
+    return next(error);
   }
   if (!mongoose.Types.ObjectId.isValid(commentId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid comment ID.' });
+    const error = new HttpError('Invalid comment Id.', 400);
+    return next(error);
   }
 
   try {
     let comment = await Comment.findById(commentId);
     if (!comment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Comment not found.',
-      });
+      const error = new HttpError('Comment not found.', 404);
+      return next(error);
     }
     let post = await Post.findById(comment.post);
 
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found.',
-      });
+      const error = new HttpError('Post not found.', 404);
+      return next(error);
     }
 
     if (comment.user.toString() !== userId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You are not authorized to delete this comment.',
-      });
+      const error = new HttpError(
+        'You are not allowed to delete this comment.',
+        403
+      );
+      return next(error);
     }
     await comment.remove();
-    ``;
 
     post.comments = post.comments.filter(
       (comment) => comment.toString() !== commentId
@@ -361,9 +348,9 @@ exports.deleteComment = async (req, res, next) => {
       success: true,
       message: 'Comment ' + commentId + ' has been deleted.',
     });
-  } catch (error) {
-    console.log('error: ', error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -376,18 +363,15 @@ exports.likePost = async (req, res, next) => {
 
   // Ensure proper object id
   if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid post ID.' });
+    const error = new HttpError('Invalid post Id.', 400);
+    return next(error);
   }
 
   try {
     let post = await Post.findById(postId).select('likes likeCount');
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: 'Post not found.',
-      });
+      const error = new HttpError('Post not found.', 404);
+      return next(error);
     }
     let action;
     if (post.likes.includes(userId)) {
@@ -408,9 +392,9 @@ exports.likePost = async (req, res, next) => {
       user: userId,
       post,
     });
-  } catch (error) {
-    console.log(error.message);
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -426,8 +410,9 @@ exports.getSavedPosts = async (req, res, next) => {
     });
 
     res.send(user);
-  } catch (error) {
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
 
@@ -440,14 +425,12 @@ exports.savePost = async (req, res, next) => {
 
   // Ensure proper object id
   if (!mongoose.Types.ObjectId.isValid(postId)) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Invalid post ID.' });
+    const error = new HttpError('Invalid post Id.', 400);
+    return next(error);
   }
 
   try {
     let user = await User.findById(userId).select('savedPosts');
-    console.log(user);
     if (user.savedPosts.includes(postId)) {
       user.savedPosts = user.savedPosts.filter(
         (post) => postId !== post.toString()
@@ -461,7 +444,8 @@ exports.savePost = async (req, res, next) => {
       success: true,
       user,
     });
-  } catch (error) {
-    res.send(error.message);
+  } catch (err) {
+    const error = new HttpError(err.message, 500);
+    return next(error);
   }
 };
