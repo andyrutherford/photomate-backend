@@ -1,5 +1,7 @@
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models/User');
 const Post = require('../models/Post');
@@ -271,7 +273,6 @@ exports.resetFollowerFollowing = async (req, res, next) => {
 // @route   GET /api/v1/user/reset-password
 // @access  PUBLIC
 exports.requestResetPassword = async (req, res, next) => {
-  console.log(req.query);
   if (!req.query) {
     return res.status(400).json({
       success: false,
@@ -305,4 +306,47 @@ exports.requestResetPassword = async (req, res, next) => {
 // @desc    Reset password
 // @route   POST /api/v1/user/reset-password
 // @access  PUBLIC
-exports.resetPassword = async (req, res, next) => {};
+exports.resetPassword = async (req, res, next) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'A token and password are required.' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: 'The password must be at least 6 characters.',
+    });
+  }
+  try {
+    let user = await User.findOne({
+      resetPasswordToken: token,
+    });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found.' });
+    }
+    if (user.githubId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'The password cannot be reset because this account is connected with Github.',
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPassword = await bcrypt.hash(password, salt);
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    // await user.save();
+
+    res.status(200).json({
+      success: true,
+      message:
+        'Reset password successful.  You may now log in with your new password.',
+    });
+  } catch (error) {}
+};
