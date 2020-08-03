@@ -45,13 +45,9 @@ exports.getUserById = async (req, res, next) => {
       const error = new HttpError('User not found.', 404);
       return next(error);
     }
-    let youAreFollowing = false;
-    if (
-      user.followers.length > 0 &&
-      user.followers.filter((u) => u.username === req.user.username)
-    ) {
-      youAreFollowing = true;
-    }
+    const youAreFollowing = user.followers
+      .map((u) => u._id)
+      .includes(req.user.id);
     return res.status(200).json({
       success: true,
       youAreFollowing,

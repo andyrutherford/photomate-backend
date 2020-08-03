@@ -160,7 +160,7 @@ exports.uploadImage = async (req, res, next) => {
 
   try {
     const response = await cloudinary.uploader.upload(req.file.path, {
-      width: 614,
+      width: 1200,
     });
     fs.unlinkSync(req.file.path);
 
@@ -246,7 +246,7 @@ exports.addComment = async (req, res, next) => {
   const user = req.user.id;
 
   if (!text) {
-    const error = new HttpError('A comment is required', 400);
+    const error = new HttpError('A comment is required.', 400);
     return next(error);
   }
 
