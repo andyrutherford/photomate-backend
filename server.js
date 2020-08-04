@@ -50,7 +50,7 @@ app.use((error, req, res, next) => {
   if (res.headerSent) {
     return next(error);
   }
-  res.status(error.code || 500).json({
+  res.status(500).json({
     success: error.success,
     message: error.message || 'An unknown error occurred.',
   });
