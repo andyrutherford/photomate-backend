@@ -106,7 +106,6 @@ exports.getPostById = async (req, res, next) => {
 // @desc    Get posts by User ID
 // @route   GET /api/v1/post/user/:username
 // @access  PRIVATE
-
 exports.getPostsByUsername = async (req, res, next) => {
   const { username } = req.params;
   try {
@@ -127,7 +126,7 @@ exports.getPostsByUsername = async (req, res, next) => {
 
 // @desc    Create Post
 // @route   POST /api/v1/post/new
-// @access  PUBLIC
+// @access  PRIVATE
 exports.createPost = async (req, res, next) => {
   const { imageUrl, caption } = req.body;
 

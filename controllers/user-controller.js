@@ -85,8 +85,8 @@ exports.updateProfile = async (req, res, next) => {
 };
 
 // @desc    Update user profile
-// @route   GET /api/v1/user
-// @access  PUBLIC
+// @route   PUT /api/v1/user
+// @access  PRIVATE
 exports.updateProfile = async (req, res, next) => {
   const { website, bio, phoneNumber, gender } = req.body;
   const profile = {

@@ -1,8 +1,8 @@
 # Photomate Backend
 
-A fully featured photo sharing web app, based on a popular social media platform. Built with the [MERN](https://medium.com/@digimktg/what-is-mern-stack-9c867dbad302).
+A fully featured photo sharing web app, based on a popular social media platform. Built with the [MERN](https://medium.com/@digimktg/what-is-mern-stack-9c867dbad302) stack.
 
-The frontend is available [here](https://github.com/andyrutherford/photomate-frontend)
+The frontend is available [here](https://github.com/andyrutherford/photomate-frontend).
 
 ## Features
 
@@ -42,20 +42,22 @@ $ EMAIL_PASSWORD=<your-email-address-password>
 
 Photomate uses a number of open source projects to work properly:
 
-- [ReactJS](https://reactjs.org/) - A JavaScript library for building user interfaces
 - [node.js](http://nodejs.org) - evented I/O for the backend
 - [Express](http://expressjs.com) - fast node.js network app framework
 - [mongoDB](https://www.mongodb.com/) - general purpose, document-based, distributed database
 - [Cloudinary](https://cloudinary.com/) - for image storage
-- [Redux](https://react-redux.js.org/) - for state management
 - [mongoose](https://mongoosejs.com/) - MongoDB object modeling for Node.js
+- [axios](https://www.npmjs.com/package/axios) - Promise based HTTP client for the browser and node.js
+- [multer](https://www.npmjs.com/package/multer) - node.js middleware for handling multipart/form-data
+- [express validator](https://express-validator.github.io/docs/) - for data validation
 - [JSON Web Token](https://jwt.io/) - for user authentication
 - [NodeMailer](https://nodemailer.com/) - module for Node.js to send emails
-- [styled components](https://styled-components.com/) - for styled components
-- [React-Toastify](https://github.com/fkhadra/react-toastify) - for alerts
-- [Emoji Mart](https://github.com/missive/emoji-mart) - for emojis
+
+Frontend tech is [here](https://github.com/andyrutherford/photomate-frontend#tech).
 
 ## Demo
+
+https://photomate.netlify.app/
 
 ## License
 

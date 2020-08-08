@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcryptjs');
 
 const HttpError = require('../models/HttpError');
 
