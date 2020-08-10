@@ -145,6 +145,7 @@ exports.forgotPassword = async (req, res, next) => {
     });
   } catch (err) {
     const error = new HttpError(err.message, 500);
+    console.log(error);
     return next(error);
   }
 };
