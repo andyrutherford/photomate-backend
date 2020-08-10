@@ -125,7 +125,7 @@ exports.forgotPassword = async (req, res, next) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: 'Becoming Verified',
+      subject: 'Reset your password',
       text:
         `You are receiving this message because you requested the reset of the password for your account.\n\n` +
         `Please click on the following link, or paste it into your browser:\n\n` +
